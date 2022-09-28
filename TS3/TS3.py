@@ -40,10 +40,10 @@ q = Vref/(2**(B-1)) #LSB
 [t, Sr] = my_senoidal(N,fs,Vref,DC,freq) # creo mi señal senoidal
 
 sigma = q/2
-
-# noise = 0
  
 noise = sigma * np.random.randn(len(t))
+
+# noise = 0
 
 Sr = Sr + noise
 
@@ -76,7 +76,7 @@ e = (Sq - Sr)/q # Error normalizado por q
 # fig, ax = plt.subplots(nrows=1 , ncols=1)
 # ax.acorr(e, usevlines=True, normed=True, maxlags = 1000, lw=2)
 # ax.grid(True)
-print("La media de la señal de error es de {:.5f}".format(np.mean(e)))
+print("La media de la señal de error es de {:.2f}".format(np.mean(e)))
 print("El desvio estandar de la error es de {:.5f}".format(np.std(Sr)))
 
 print("La varianza de la señal de error es de {:.5f}\n".format(np.var(e)))
