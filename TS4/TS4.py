@@ -9,6 +9,7 @@ Created on Wed Sep 28 20:04:17 2022
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.signal as sig
+from scipy.fft import fft, fftshift
 
 def my_senoidal (N, freq_M, amplitud = 1, valor_medio = 0, freq = 1, fase = 0):
     
@@ -80,9 +81,9 @@ ff_os = np.arange(0, fs_Os, fs_Os/N_Os)
 
 # SNR_f = 10*np.log10(Amplitud**2/(2*Sigma_2)) ## verifico que obtuve mi SNR
 
-f_noise_a = np.fft.fft(noise_a)
+f_noise_a = np.fft.fft(noise_a)/noise_a.shape[0]
 
-f_noise_d = np.fft.fft(noise_d)
+f_noise_d = np.fft.fft(noise_d)/noise_d.shape[0]
 
 # ax.plot(k_D/2, abs(f_noise_a)**2)
 
@@ -130,5 +131,34 @@ plt.plot( ff_os[ff_os <= fs/2], 10* np.log10(2*np.abs(f_noise_a[ff_os <= fs/2])*
 # plt.plot( np.array([-q/2, -q/2, q/2, q/2]), np.array([0, N/bins, N/bins, 0]), '--r' )
 # plt.title( 'Ruido de cuantización para {:d} bits - $\pm V_R= $ {:3.1f} V - q = {:3.3f} V'.format(B, Vf, q))
  
- 
+#%% prub
+window = sig.windows.bartlett(51)
+
+plt.plot(window)
+
+plt.title("Bartlett window")
+
+plt.ylabel("Amplitude")
+
+plt.xlabel("Sample")
+
+plt.figure()
+
+A = fft(window, 2048) / (len(window)/2.0)
+
+freq = np.linspace(-0.5, 0.5, len(A))
+
+response = 20 * np.log10(np.abs(fftshift(A / abs(A).max())))
+
+plt.plot(freq, response)
+
+plt.axis([-0.5, 0.5, -120, 0])
+
+plt.title("Frequency response of the Bartlett window")
+
+plt.ylabel("Normalized magnitude [dB]")
+
+plt.xlabel("Normalized frequency [cycles per sample]")
+
+
 

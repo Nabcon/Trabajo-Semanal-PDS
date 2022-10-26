@@ -31,7 +31,7 @@ freq_1 = (k0+0.75)*fs/N
 freq_2 = (k0+0.25)*fs/N
 freq_3 = (k0+0.5)*fs/N
 
-zero_padd = 0
+zero_padd = 100
 
 
 [t, Sr] = my_senoidal(N,fs,Amplitud, DC,freq)
@@ -63,10 +63,14 @@ Area_2 = np.sum(2*np.abs(Sr2_fft[bfrec])**2)
 Area_3 = np.sum(2*np.abs(Sr3_fft[bfrec])**2)
 
 plt.clf()
-plt.plot( ff_2[bfrec], 10*np.log10(2*np.abs(Sr_fft[bfrec])**2),label = "freq = {:3.3f} Area {:3.3f}".format(freq,Area))
-plt.plot( ff_2[bfrec], 10*np.log10(2*np.abs(Sr1_fft[bfrec])**2),label = "freq = {:3.3f} Area {:3.3f}".format(freq_1,Area_1))
-plt.plot( ff_2[bfrec], 10*np.log10(2*np.abs(Sr2_fft[bfrec])**2),label = "freq = {:3.3f} Area {:3.3f}".format(freq_2,Area_2))
-plt.plot( ff_2[bfrec], 10*np.log10(2*np.abs(Sr3_fft[bfrec])**2),label = "freq = {:3.3f} Area {:3.3f}".format(freq_3,Area_3))
+plt.plot( ff_2[bfrec], (2*np.abs(Sr_fft[bfrec])**2),label = "freq = {:3.3f} Area {:3.3f}".format(freq,Area))
+plt.plot( ff_2[bfrec], (2*np.abs(Sr1_fft[bfrec])**2),label = "freq = {:3.3f} Area {:3.3f}".format(freq_1,Area_1))
+plt.plot( ff_2[bfrec], (2*np.abs(Sr2_fft[bfrec])**2),label = "freq = {:3.3f} Area {:3.3f}".format(freq_2,Area_2))
+plt.plot( ff_2[bfrec], (2*np.abs(Sr3_fft[bfrec])**2),label = "freq = {:3.3f} Area {:3.3f}".format(freq_3,Area_3))
+# plt.plot( ff_2[bfrec], 10*np.log10(2*np.abs(Sr_fft[bfrec])**2),label = "freq = {:3.3f} Area {:3.3f}".format(freq,Area))
+# plt.plot( ff_2[bfrec], 10*np.log10(2*np.abs(Sr1_fft[bfrec])**2),label = "freq = {:3.3f} Area {:3.3f}".format(freq_1,Area_1))
+# plt.plot( ff_2[bfrec], 10*np.log10(2*np.abs(Sr2_fft[bfrec])**2),label = "freq = {:3.3f} Area {:3.3f}".format(freq_2,Area_2))
+# plt.plot( ff_2[bfrec], 10*np.log10(2*np.abs(Sr3_fft[bfrec])**2),label = "freq = {:3.3f} Area {:3.3f}".format(freq_3,Area_3))
 plt.grid()
 plt.xlim([245,255])
 axes_hdl = plt.gca()
