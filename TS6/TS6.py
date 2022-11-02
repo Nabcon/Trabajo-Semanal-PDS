@@ -13,67 +13,44 @@ from scipy.fft import fft, fftshift, fftfreq
 
 
 N = 1000;
-nn = np.arange(N)
+fs = 1000
+zero_padd = 15
 
-zero_padd = 1
-
-entrada = np.ones(N)
-# hamming = 0.54 - 0.46*np.cos(2*np.pi*nn/(N-1))
-# hanning = 0.5 - 0.5*np.cos(2*np.pi*nn/(N+1))
-# blackman = 0.42 - 0.5*np.cos(2*np.pi*nn/(N-1)) + 0.08*np.cos(4*np.pi*nn/(N-1)) 
-
+Rectangular = np.ones(N)
 Bartlett    = sig.windows.bartlett(N)
-hann        = sig.windows.hann(N)
+Hann        = sig.windows.hann(N)
 Blackman    = sig.windows.blackman(N)              
 FlatTop     = sig.windows.flattop(N)
 
+Rectangular = np.append(Rectangular,np.zeros(zero_padd*N))
 Bartlett = np.append(Bartlett,np.zeros(zero_padd*N))
+Hann = np.append(Hann,np.zeros(zero_padd*N))
+Blackman = np.append(Blackman,np.zeros(zero_padd*N))
+FlatTop = np.append(FlatTop,np.zeros(zero_padd*N))
 
+fft_Rectangular = fft(Rectangular)/Rectangular.shape[0]
 fft_Bartlett = fft(Bartlett)/Bartlett.shape[0]
+fft_Hann = fft(Hann)/Hann.shape[0] 
+fft_Blackman = fft(Blackman)/Blackman.shape[0] 
+fft_FlatTop = fft(FlatTop)/Blackman.shape[0] 
 
-ff = np.linspace(-0.5, 0.5, len(fft_Bartlett))
-# t = np.arange(len(fft_Bartlett))
-# ff = fftshift(fftfreq(t.shape[-1]))
+ff = np.arange(0, fs, 1/(zero_padd+1))
 
-plt.plot(ff, 20*np.log10(np.abs(fftshift(fft_Bartlett))))
-#plt.plot(ff, 20*np.log10(np.abs(fftshift(fft_Bartlett/abs(fft_Bartlett).max()))))
-plt.axis([-0.5, 0.5, -120, 0])
-# fig, [ax1,ax2,ax3,ax4] = plt.subplots(nrows=4 , ncols=1)
-# ax1.plot(Bartlett)
-# ax2.plot(hann)
-# ax3.plot(Blackman)
-# ax4.plot(FlatTop)
+ffr_Rectangular_log = 20*np.log10(np.abs(fft_Rectangular)/abs(fft_Rectangular[0])) 
+fft_Bartlett_log = 20*np.log10(np.abs(fft_Bartlett)/abs(fft_Bartlett[0]))   
+fft_Hann_log = 20*np.log10(np.abs(fft_Hann)/abs(fft_Hann[0]))   
+fft_Blackman_log = 20*np.log10(np.abs(fft_Blackman)/abs(fft_Blackman[0]))   
+fft_FlatTop_log = 20*np.log10(np.abs(fft_FlatTop)/abs(fft_FlatTop[0]))   
 
- 
-#%% prub
+ff_aux = ff < 10
 
-from scipy.fft import fft, fftshift
+plt.plot(ff[ff_aux], ffr_Rectangular_log[ff_aux], label = "Rectangular")
+plt.plot(ff[ff_aux], fft_Bartlett_log[ff_aux], label = "Bartlett")
+plt.plot(ff[ff_aux], fft_Hann_log[ff_aux], label = "Hann")
+plt.plot(ff[ff_aux], fft_Blackman_log[ff_aux], label = "Blackman")
+plt.plot(ff[ff_aux], fft_FlatTop_log[ff_aux], label = "FlatTop")
 
-window = sig.windows.bartlett(51)
-
-plt.plot(window)
-
-plt.title("Bartlett window")
-
-plt.ylabel("Amplitude")
-
-plt.xlabel("Sample")
-
-plt.figure()
-
-A = fft(window, 2048) / (len(window)/2.0)
-
-freq = np.linspace(-0.5, 0.5, len(A))
-
-response = 20 * np.log10(np.abs(fftshift(A / abs(A).max())))
-
-plt.plot(freq, response)
-
-plt.axis([-0.5, 0.5, -120, 0])
-
-plt.title("Frequency response of the Bartlett window")
-
-plt.ylabel("Normalized magnitude [dB]")
-
-plt.xlabel("Normalized frequency [cycles per sample]")
-
+plt.autoscale(enable = True, axis = 'x', tight = True)
+plt.ylim([-150, 1])
+plt.legend()
+plt.grid()
