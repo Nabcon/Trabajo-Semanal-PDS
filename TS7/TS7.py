@@ -17,7 +17,7 @@ freq = fs/4
 DC = 0
 Amplitud = 2
 
-Wbins = 10
+Wbins = 2
 
 realizaciones = 200
 ts = 1/fs
@@ -52,20 +52,31 @@ XX_Flat = np.fft.fft(XX_sin_FlatTop, axis = 0)/XX_sin_FlatTop.shape[0]
 
 ff = np.arange(0, fs, fs/N)
 bfrec = ff<= fs/2
-# plt.figure(1)
-# plt.plot(ff[ff <= fs/2],10*np.log10(2*np.abs(XX_rect[ff <= fs/2 , :])**2))
-# plt.title("rectangular")
-# plt.ylim([-175, 1])
+plt.figure(1)
+plt.plot(ff[ff <= fs/2],10*np.log10(2*np.abs(XX_rect[ff <= fs/2 , :])**2))
+plt.title("rectangular")
+plt.ylim([-175, 1])
 
-# plt.figure(2)
-# plt.plot(ff[ff <= fs/2],10*np.log10(2*np.abs(XX_Bart[ff <= fs/2 , :])**2))
-# plt.ylim([-175, 1])
-# plt.title("Bartlett")
+plt.figure(2)
+plt.plot(ff[ff <= fs/2],10*np.log10(2*np.abs(XX_Bart[ff <= fs/2 , :])**2))
+plt.ylim([-175, 1])
+plt.title("Bartlett")
 
-# plt.figure(3)
-# plt.plot(ff[ff <= fs/2],10*np.log10(2*np.abs(XX_Flat[ff <= fs/2 , :])**2))
-# plt.ylim([-175, 1])
-# plt.title("FlatTop")
+plt.figure(2)
+plt.plot(ff[ff <= fs/2],10*np.log10(2*np.abs(XX_Hann[ff <= fs/2 , :])**2))
+plt.ylim([-175, 1])
+plt.title("Hann")
+
+plt.figure(3)
+plt.plot(ff[ff <= fs/2],10*np.log10(2*np.abs(XX_Flat[ff <= fs/2 , :])**2))
+#plt.plot(ff[ff <= fs/2],(np.abs(XX_Flat[ff <= fs/2 , :])**2))
+plt.ylim([-175, 1])
+plt.title("FlatTop")
+
+plt.figure(2)
+plt.plot(ff[ff <= fs/2],10*np.log10(2*np.abs(XX_Hann[ff <= fs/2 , :])**2))
+plt.ylim([-175, 1])
+plt.title("Hann")
 
 #%% estimadores
 from pandas import DataFrame
@@ -145,14 +156,25 @@ Est_integral = np.vstack([Amplitud_estimada_rect, Amplitud_estimada_Bart, Amplit
 # Histogramas
 # plt.clf()
 # plt.figure(1)
-# plt.title("Slice")
+plt.title("Slice")
+kwargs = dict(alpha=0.5,bins = 10, density=False, stacked=True)
+kwargs_2 = dict(alpha=0.5, bins = 2,density=False, stacked=True)
+plt.hist(Est_Slide[:,0],**kwargs, label = "Rectangular")
+plt.hist(Est_Slide[:,1],**kwargs, label = "Bartlett")
+plt.hist(Est_Slide[:,2],**kwargs, label = "Hann")
+plt.hist(Est_Slide[:,3],**kwargs, label = "Blackman")
+plt.hist(Est_Slide[:,4],**kwargs_2, label = "FlatTop")
+plt.legend()
+
+# plt.figure(2)
+# plt.title("Integral")
 # kwargs = dict(alpha=0.5,bins = 10, density=False, stacked=True)
 # kwargs_2 = dict(alpha=0.5, bins = 2,density=False, stacked=True)
-# plt.hist(Est_Slide[:,0],**kwargs, label = "Rectangular")
-# plt.hist(Est_Slide[:,1],**kwargs, label = "Bartlett")
-# plt.hist(Est_Slide[:,2],**kwargs, label = "Hann")
-# plt.hist(Est_Slide[:,3],**kwargs, label = "Blackman")
-# plt.hist(Est_Slide[:,4],**kwargs_2, label = "FlatTop")
+# plt.hist(Est_integral[:,0],**kwargs, label = "Rectangular")
+# plt.hist(Est_integral[:,1],**kwargs, label = "Bartlett")
+# plt.hist(Est_integral[:,2],**kwargs, label = "Hann")
+# plt.hist(Est_integral[:,3],**kwargs, label = "Blackman")
+# plt.hist(Est_integral[:,4],**kwargs_2, label = "FlatTop")
 # plt.legend()
 
 
