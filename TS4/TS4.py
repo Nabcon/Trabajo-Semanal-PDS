@@ -23,142 +23,160 @@ def my_senoidal (N, freq_M, amplitud = 1, valor_medio = 0, freq = 1, fase = 0):
 
 def my_ADC(Sr, B, Vref):
     
-    #q = 2*Vref/((2**B)-1) # LSB
     q = Vref/(2**(B-1)) # LSB
-    
     Sq = q * np.round(Sr/q)
+    error = Sq - Sr
+    return Sq, error
+
+def ADC_analisis(kn,fs,N,B,Vref,Amplitud,ff = 1):
+
+    ts = 1/fs
     
-    return Sq
-
-# escalo el numero de muestras y la señal. Por cada 4 muestras de mi señal senoidal, elijo 1
-Os = 4
+    q = Vref/(2**(B-1))
     
-fs_Os = Os*1000 # frecuencia de muestreo
-N_Os = Os*1000   # cantidad de muestras
-freq = 1
-DC = 0
-Amplitud = 1
+    over_sampling = 1
+    N_os = N*over_sampling
+    fs_os = fs*over_sampling
+    
 
-# ADC
-B = 4 # Bits
-Vref = 2 # Voltaje de entrada del ADC
-q = Vref/(2**(B-1)) #LSB
+    [tt_os, analog_sig] = my_senoidal(N_os,fs_os,amplitud = Amplitud,freq = ff) # creo mi señal senoidal con OS
+    tt = np.linspace(0, (N-1)*ts, N) #vector temporal sin OS
+    
+    q = Vref/(2**(B-1)) # LSB
+    pot_ruido = ((q**2)/12 )* kn # Watts (potencia de la señal 1 W)
+    desvio = np.sqrt(pot_ruido)
+    
+    #Metodo de definir manualmente un piso de ruido analogico
+    #SNR = 40
+    #Sigma_2 = Amplitud**2/(2*10**(SNR/20))
+    #noise_a = np.sqrt(Sigma_2) * np.random.randn(len(analog_sig))
+    # SNR_f = 10*np.log10(Amplitud**2/(2*Sigma_2)) ## verifico que obtuve mi SNR
+    
+    # Ruido incorrelado y gaussiano
+    n = np.random.normal(0, desvio, size=N_os)
+    #signal_ruido = analog_sig + n
+    signal_ruido = analog_sig + n
+    
+    sr = signal_ruido[::over_sampling] #le saco el OS a mi señal ruidosa
+    
+    #ADC
+    srq, nq= my_ADC(sr,B,Vref)
+    
+    # Densidad espectral de potencia
+    ff = np.arange(0, fs, fs/N)
+    ff_os = np.arange(0, fs_os, fs_os/N_os)
+    ft_Srq = fft(srq,N)/srq.shape[0]
+    ft_As = fft(analog_sig,N_os)/analog_sig.shape[0]
+    ft_SR = fft(sr,N)/sr.shape[0]
+    ft_Nn = fft(n,N_os)/n.shape[0]  #piso de ruido analogico -> ruido gausseano
+    ft_Nq = fft(nq,N)/nq.shape[0]   #piso de ruido digital -> error cuantizacion
+    
+    bfrec = ff <= fs/2
+    nNn_mean = np.mean(np.abs(ft_Nn)**2)
+    Nnq_mean = np.mean(np.abs(ft_Nq)**2)
+    
+    plt.close('all')
+     
+    plt.figure(1)
+    plt.plot(tt, srq, lw=2, label='$ s_Q = Q_{B,V_F}\{s_R\} $ (ADC out)')
+    plt.plot(tt, sr, linestyle=':', color='green',marker='o', markersize=3, markerfacecolor='none', markeredgecolor='green', fillstyle='none', label='$ s_R = s + n $  (ADC in)')
+    plt.plot(tt_os, analog_sig, color='orange', ls='dotted', label='$ s $ (analog)')
+    plt.title('Señal muestreada por un ADC de {:d} bits - $\pm V_R= $ {:3.1f} V - q = {:3.3f} V'.format(B, Amplitud, q) )
+    plt.xlabel('tiempo [segundos]')
+    plt.ylabel('Amplitud [V]')
+    axes_hdl = plt.gca()
+    axes_hdl.legend()
+    plt.show()
+     
+    plt.figure(2) 
+    plt.plot( ff[bfrec], 10* np.log10(2*np.abs(ft_Srq[bfrec])**2), lw=2, label='$ s_Q = Q_{B,V_F}\{s_R\} $ (ADC out)' )
+    plt.plot( ff_os[ff_os <= fs/2], 10* np.log10(2*np.abs(ft_As[ff_os <= fs/2])**2), color='orange', ls='dotted', label='$ s $ (analog)' )
+    plt.plot( ff[bfrec], 10* np.log10(2*np.abs(ft_SR[bfrec])**2), ':g', label='$ s_R = s + n $  (ADC in)' )
+    plt.plot( ff_os[ff_os <= fs/2], 10* np.log10(2*np.abs(ft_Nn[ff_os <= fs/2])**2), ':r')
+    plt.plot( ff[bfrec], 10* np.log10(2*np.abs(ft_Nq[bfrec])**2), ':c')
+    plt.plot( np.array([ ff[bfrec][0], ff[bfrec][-1] ]), 10* np.log10(2* np.array([nNn_mean, nNn_mean]) ), '--r', label= '$ \overline{n} = $' + '{:3.1f} dB (piso analog.)'.format(10* np.log10(2* nNn_mean)) )
+    plt.plot( np.array([ ff[bfrec][0], ff[bfrec][-1] ]), 10* np.log10(2* np.array([Nnq_mean, Nnq_mean]) ), '--c', label='$ \overline{n_Q} = $' + '{:3.1f} dB (piso digital)'.format(10* np.log10(2* Nnq_mean)) )
+    plt.title('Señal muestreada por un ADC de {:d} bits - $\pm V_R= $ {:3.1f} V - q = {:3.3f} V'.format(B, Amplitud, q) )
+    plt.ylabel('Densidad de Potencia [dB]')
+    plt.xlabel('Frecuencia [Hz]')
+    axes_hdl = plt.gca()
+    axes_hdl.legend()
+    # suponiendo valores negativos de potencia ruido en dB
+    plt.ylim((1.5*np.min(10* np.log10(2* np.array([Nnq_mean, nNn_mean]))),10))
+     
+     
+    plt.figure(3)
+    bins = 10
+    plt.hist(nq, bins=bins)
+    plt.plot( np.array([-q/2, -q/2, q/2, q/2]), np.array([0, N/bins, N/bins, 0]), '--r' )
+    plt.title( 'Ruido de cuantización para {:d} bits - $\pm V_R= $ {:3.1f} V - q = {:3.3f} V'.format(B, Amplitud, q))
 
-# Especificaciones
-SNR = 40
+    return
 
-# Potencia de ruido
+#%%
 kn = 1
-pot_ruido = q**2/12 * kn
+fs = 1000
+N = 1000
+B = 4
+Vref = 1
+A = 2
 
-[t, Sr] = my_senoidal(N_Os,fs_Os,Amplitud, DC,freq) # creo mi señal senoidal
+ADC_analisis(kn,fs,N,B,Vref,A)
 
-# Para tener un piso de ruido analogico de 60db, tengo que encontrar que sigma
-# me cumple con eso
+#%%
+#Analizar para una de las siguientes configuraciones B = ̣{4, 8 y 16} bits, kn={1/10,1,10}
+#Discutir los resultados respecto a lo obtenido en a).
+B = 4
+kn = 1/10
+ADC_analisis(kn,fs,N,B,Vref,A)
 
-Sigma_2 = Amplitud**2/(2*10**(SNR/10))
+#%%
+B = 4
+kn = 10
+ADC_analisis(kn,fs,N,B,Vref,A)
 
-noise_a = np.sqrt(Sigma_2) * np.random.randn(len(Sr))
+#%%
+B = 8
+kn = 1/10
+ADC_analisis(kn,fs,N,B,Vref,A)
 
-Sr_ruido = Sr + noise_a # le sumo el ruido
+#%%
+B = 8
+kn = 1
+ADC_analisis(kn,fs,N,B,Vref,A)
 
-# Realizo el oversampling para poder simular el comportamiento de no tener infinitas muestras
-N = N_Os/Os
-fs = fs_Os/Os
+#%%
+B = 8
+kn = 10
+ADC_analisis(kn,fs,N,B,Vref,A)
+#%%
+B = 16
+kn = 1/10
+ADC_analisis(kn,fs,N,B,Vref,A)
 
-S_D = np.arange(N)
-S_D = Sr_ruido[::Os] #Inicio : Final : Cada cuantas muestras
+#%%
+B = 16
+kn = 1
+ADC_analisis(kn,fs,N,B,Vref,A)
 
-Sq = my_ADC(S_D,B,Vref) #cuantizo mi señal sin el oversampling con ruido
+#%%
+B = 16
+kn = 10
+ADC_analisis(kn,fs,N,B,Vref,A)
 
+#%% ALIAS
 
-noise_d = (Sq - S_D)/q  # Ruido digital
+#Nyquist dice que para evitar el efecto de Alias, se tiene que cumplir que
+#fs >= 2.ff
 
+# datos de la senoidal
+N = 1000  # cantidad de muestras
 
-# Creo los vectores para graficar
-ff = np.arange(0, fs, fs/N)
-ff_os = np.arange(0, fs_Os, fs_Os/N_Os)
+factor = 0.9 # factor para hacer que fs < 2.ff
+frec = 1
+fs = 2*frec*factor
 
-# SNR_f = 10*np.log10(Amplitud**2/(2*Sigma_2)) ## verifico que obtuve mi SNR
+B = 4
+kn = 1
 
-f_noise_a = np.fft.fft(noise_a)/noise_a.shape[0]
-
-f_noise_d = np.fft.fft(noise_d)/noise_d.shape[0]
-
-# ax.plot(k_D/2, abs(f_noise_a)**2)
-
-## armo el vector para las transformada de fouriere
-
-
-# ax.plot(t,Sr_ruido,linewidth = 3)
-
-fig, ax = plt.subplots(nrows=1 , ncols=1)
-
-bfrec = ff <= fs/2
-
-
-SNR_verif = 10*np.log10(np.var(Sr)/np.var(noise_a))
-
-
-
-plt.plot( ff_os[ff_os <= fs/2], 10* np.log10(2*np.abs(f_noise_a[ff_os <= fs/2])**2), ':r')
-
-# plt.figure(2)
- 
-# Nnq_mean = np.mean(np.abs(ft_Nq)**2)
-
-# plt.plot( ff[bfrec], 10* np.log10(2*np.abs(f_noise_d[bfrec])**2), ':c')
- 
-# plt.plot( ff[bfrec], 10* np.log10(2*np.abs(ft_Srq[bfrec])**2), lw=2, label='$ s_Q = Q_{B,V_F}\{s_R\} $ (ADC out)' )
-# plt.plot( ff_os[ff_os <= fs/2], 10* np.log10(2*np.abs(ft_As[ff_os <= fs/2])**2), color='orange', ls='dotted', label='$ s $ (analog)' )
-# plt.plot( ff[bfrec], 10* np.log10(2*np.abs(ft_SR[bfrec])**2), ':g', label='$ s_R = s + n $  (ADC in)' )
-# plt.plot( ff_os[ff_os <= fs/2], 10* np.log10(2*np.abs(ft_Nn[ff_os <= fs/2])**2), ':r')
-# plt.plot( ff[bfrec], 10* np.log10(2*np.abs(ft_Nq[bfrec])**2), ':c')
-# plt.plot( np.array([ ff[bfrec][0], ff[bfrec][-1] ]), 10* np.log10(2* np.array([nNn_mean, nNn_mean]) ), '--r', label= '$ \overline{n} = $' + '{:3.1f} dB (piso analog.)'.format(10* np.log10(2* nNn_mean)) )
-# plt.plot( np.array([ ff[bfrec][0], ff[bfrec][-1] ]), 10* np.log10(2* np.array([Nnq_mean, Nnq_mean]) ), '--c', label='$ \overline{n_Q} = $' + '{:3.1f} dB (piso digital)'.format(10* np.log10(2* Nnq_mean)) )
-# plt.title('Señal muestreada por un ADC de {:d} bits - $\pm V_R= $ {:3.1f} V - q = {:3.3f} V'.format(B, Vf, q) )
-# plt.ylabel('Densidad de Potencia [dB]')
-# plt.xlabel('Frecuencia [Hz]')
-# axes_hdl = plt.gca()
-# axes_hdl.legend()
-# # suponiendo valores negativos de potencia ruido en dB
-# plt.ylim((1.5*np.min(10* np.log10(2* np.array([Nnq_mean, nNn_mean]))),10))
- 
- 
-# plt.figure(3)
-# bins = 10
-# plt.hist(nq, bins=bins)
-# plt.plot( np.array([-q/2, -q/2, q/2, q/2]), np.array([0, N/bins, N/bins, 0]), '--r' )
-# plt.title( 'Ruido de cuantización para {:d} bits - $\pm V_R= $ {:3.1f} V - q = {:3.3f} V'.format(B, Vf, q))
- 
-#%% prub
-window = sig.windows.bartlett(51)
-
-plt.plot(window)
-
-plt.title("Bartlett window")
-
-plt.ylabel("Amplitude")
-
-plt.xlabel("Sample")
-
-plt.figure()
-
-A = fft(window, 2048) / (len(window)/2.0)
-
-freq = np.linspace(-0.5, 0.5, len(A))
-
-response = 20 * np.log10(np.abs(fftshift(A / abs(A).max())))
-
-plt.plot(freq, response)
-
-plt.axis([-0.5, 0.5, -120, 0])
-
-plt.title("Frequency response of the Bartlett window")
-
-plt.ylabel("Normalized magnitude [dB]")
-
-plt.xlabel("Normalized frequency [cycles per sample]")
-
-
-
+ADC_analisis(kn,fs,N,B,Vref,A,ff = frec)

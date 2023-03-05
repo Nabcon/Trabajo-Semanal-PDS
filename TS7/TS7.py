@@ -17,7 +17,7 @@ freq = fs/4
 DC = 0
 Amplitud = 2
 
-Wbins = 2
+
 
 realizaciones = 200
 ts = 1/fs
@@ -54,80 +54,89 @@ ff = np.arange(0, fs, fs/N)
 bfrec = ff<= fs/2
 plt.figure(1)
 plt.plot(ff[ff <= fs/2],10*np.log10(2*np.abs(XX_rect[ff <= fs/2 , :])**2))
+plt.plot(ff[ff <= fs/2],(2*np.abs(XX_rect[ff <= fs/2 , :])**2))
+plt.xlim([245,255])
 plt.title("rectangular")
 plt.ylim([-175, 1])
 
 plt.figure(2)
 plt.plot(ff[ff <= fs/2],10*np.log10(2*np.abs(XX_Bart[ff <= fs/2 , :])**2))
+plt.plot(ff[ff <= fs/2],(2*np.abs(XX_Bart[ff <= fs/2 , :])**2))
+plt.xlim([245,255])
 plt.ylim([-175, 1])
 plt.title("Bartlett")
 
-plt.figure(2)
+plt.figure(3)
 plt.plot(ff[ff <= fs/2],10*np.log10(2*np.abs(XX_Hann[ff <= fs/2 , :])**2))
+plt.plot(ff[ff <= fs/2],(2*np.abs(XX_Hann[ff <= fs/2 , :])**2))
+plt.xlim([245,255])
 plt.ylim([-175, 1])
 plt.title("Hann")
 
-plt.figure(3)
+plt.figure(4)
+plt.plot(ff[ff <= fs/2],10*np.log10(2*np.abs(XX_Black[ff <= fs/2 , :])**2))
+plt.plot(ff[ff <= fs/2],(2*np.abs(XX_Black[ff <= fs/2 , :])**2))
+plt.xlim([245,255])
+plt.ylim([-175, 1])
+plt.title("Blackman")
+
+plt.figure(5)
 plt.plot(ff[ff <= fs/2],10*np.log10(2*np.abs(XX_Flat[ff <= fs/2 , :])**2))
-#plt.plot(ff[ff <= fs/2],(np.abs(XX_Flat[ff <= fs/2 , :])**2))
+plt.plot(ff[ff <= fs/2],(2*np.abs(XX_Flat[ff <= fs/2 , :])**2))
+plt.xlim([245,255])
 plt.ylim([-175, 1])
 plt.title("FlatTop")
-
-plt.figure(2)
-plt.plot(ff[ff <= fs/2],10*np.log10(2*np.abs(XX_Hann[ff <= fs/2 , :])**2))
-plt.ylim([-175, 1])
-plt.title("Hann")
 
 #%% estimadores
 from pandas import DataFrame
 from IPython.display import HTML
-
+Wbins = 3
 #rectangular
-estimacion_amp_rect = np.abs(XX_rect[250 , :])*2
+Amplitud_Slice_Rect = 2*np.abs(XX_rect[250 , :]) # nos quedamos con una feta y obtemos la amplitud
 Densidad_Potencia_rect = 2*np.abs(XX_rect)**2
-sub_matriz_rect = Densidad_Potencia_rect[250-Wbins:250+Wbins+1, :]
+sub_matriz_rect = Densidad_Potencia_rect[250-Wbins:250+Wbins, :]
 Potencia_estimada_rect = np.sum(sub_matriz_rect, axis = 0)
-Amplitud_estimada_rect = np.sqrt(2*Potencia_estimada_rect)
+Amplitud_Integral_Rect = np.sqrt(2*Potencia_estimada_rect)
 
 #Bartlett
-estimacion_amp_Bart = np.abs(XX_Bart[250 , :])*2
+Amplitud_Slice_Bart = 2*np.abs(XX_Bart[250 , :])
 Densidad_Potencia_Bart = 2*np.abs(XX_Bart)**2
-sub_matriz_Bart = Densidad_Potencia_Bart[250-Wbins:250+Wbins+1, :]
+sub_matriz_Bart = Densidad_Potencia_Bart[250-Wbins:250+Wbins, :]
 Potencia_estimada_Bart = np.sum(sub_matriz_Bart, axis = 0)
-Amplitud_estimada_Bart = np.sqrt(2*Potencia_estimada_Bart)
+Amplitud_Integral_Bart = np.sqrt(2*Potencia_estimada_Bart)
 
 #Hann
-estimacion_amp_Hann = np.abs(XX_Hann[250 , :])*2
+Amplitud_Slice_Hann = 2*np.abs(XX_Hann[250 , :])
 Densidad_Potencia_Hann = 2*np.abs(XX_Hann)**2
-sub_matriz_Hann = Densidad_Potencia_Hann[250-Wbins:250+Wbins+1, :]
+sub_matriz_Hann = Densidad_Potencia_Hann[250-Wbins:250+Wbins, :]
 Potencia_estimada_Hann = np.sum(sub_matriz_Hann, axis = 0)
-Amplitud_estimada_Hann = np.sqrt(2*Potencia_estimada_Hann)
+Amplitud_Integral_Hann = np.sqrt(2*Potencia_estimada_Hann)
 
 #BlackMan
-estimacion_amp_Black = np.abs(XX_Black[250 , :])*2
+Amplitud_Slice_Black = 2*np.abs(XX_Black[250 , :])
 Densidad_Potencia_Black = 2*np.abs(XX_Black)**2
-sub_matriz_Black = Densidad_Potencia_Black[250-Wbins:250+Wbins+1, :]
+sub_matriz_Black = Densidad_Potencia_Black[250-Wbins:250+Wbins, :]
 Potencia_estimada_Black = np.sum(sub_matriz_Black, axis = 0)
-Amplitud_estimada_Black = np.sqrt(2*Potencia_estimada_Black)
+Amplitud_Integral_Black = np.sqrt(2*Potencia_estimada_Black)
 
 #FlatTop
-estimacion_amp_Flat = np.abs(XX_Flat[250 , :])*2
+Amplitud_Slice_Flat = 2*np.abs(XX_Flat[250 , :])
 Densidad_Potencia_Flat = 2*np.abs(XX_Flat)**2
-sub_matriz_Flat = Densidad_Potencia_Flat[250-Wbins:250+Wbins+1, :]
+sub_matriz_Flat = Densidad_Potencia_Flat[250-Wbins:250+Wbins, :]
 Potencia_estimada_Flat = np.sum(sub_matriz_Flat, axis = 0)
-Amplitud_estimada_Flat = np.sqrt(2*Potencia_estimada_Flat)
+Amplitud_Integral_Flat = np.sqrt(2*Potencia_estimada_Flat)
 
 # vstack concatena verticalmente
-Estimadores_rect = np.vstack([estimacion_amp_rect, Amplitud_estimada_rect]).transpose()
-Estimadores_Bart = np.vstack([estimacion_amp_Bart, Amplitud_estimada_Bart]).transpose()
-Estimadores_Hann = np.vstack([estimacion_amp_Hann, Amplitud_estimada_Hann]).transpose()
-Estimadores_Black = np.vstack([estimacion_amp_Black, Amplitud_estimada_Black]).transpose()
-Estimadores_Flat = np.vstack([estimacion_amp_Flat, Amplitud_estimada_Flat]).transpose()
+Estimadores_rect = np.vstack([Amplitud_Slice_Rect, Amplitud_Integral_Rect]).transpose()
+Estimadores_Bart = np.vstack([Amplitud_Slice_Bart, Amplitud_Integral_Bart]).transpose()
+Estimadores_Hann = np.vstack([Amplitud_Slice_Hann, Amplitud_Integral_Hann]).transpose()
+Estimadores_Black = np.vstack([Amplitud_Slice_Black, Amplitud_Integral_Black]).transpose()
+Estimadores_Flat = np.vstack([Amplitud_Slice_Flat, Amplitud_Integral_Flat]).transpose()
 
 # rectangular
-Medianas_rect = np.median(Estimadores_rect, axis = 0)
-Sesgo_rect = np.median(Estimadores_rect, axis = 0) - Amplitud
-Varianza_rect = np.mean((Estimadores_rect - Medianas_rect)**2, axis = 0)
+Medianas_Rect = np.median(Estimadores_rect, axis = 0)
+Sesgo_Rect = np.median(Estimadores_rect, axis = 0) - Amplitud
+Varianza_Rect = np.mean((Estimadores_rect - Medianas_Rect)**2, axis = 0)
 
 # Bartlett
 Medianas_Bart = np.median(Estimadores_Bart, axis = 0)
@@ -150,8 +159,8 @@ Sesgo_Flat = np.median(Estimadores_Flat, axis = 0) - Amplitud
 Varianza_Flat = np.mean((Estimadores_Flat - Medianas_Flat)**2, axis = 0)
 
 #Agrupo por estimador
-Est_Slide = np.vstack([estimacion_amp_rect, estimacion_amp_Bart,estimacion_amp_Hann,estimacion_amp_Black, estimacion_amp_Flat]).transpose()
-Est_integral = np.vstack([Amplitud_estimada_rect, Amplitud_estimada_Bart, Amplitud_estimada_Hann, Amplitud_estimada_Black, Amplitud_estimada_Flat]).transpose()
+Est_Slice = np.vstack([Amplitud_Slice_Rect, Amplitud_Slice_Bart,Amplitud_Slice_Hann,Amplitud_Slice_Black, Amplitud_Slice_Flat]).transpose()
+Est_integral = np.vstack([Amplitud_Integral_Rect, Amplitud_Integral_Bart, Amplitud_Integral_Hann, Amplitud_Integral_Black, Amplitud_Integral_Flat]).transpose()
 
 # Histogramas
 # plt.clf()
@@ -159,29 +168,29 @@ Est_integral = np.vstack([Amplitud_estimada_rect, Amplitud_estimada_Bart, Amplit
 plt.title("Slice")
 kwargs = dict(alpha=0.5,bins = 10, density=False, stacked=True)
 kwargs_2 = dict(alpha=0.5, bins = 2,density=False, stacked=True)
-plt.hist(Est_Slide[:,0],**kwargs, label = "Rectangular")
-plt.hist(Est_Slide[:,1],**kwargs, label = "Bartlett")
-plt.hist(Est_Slide[:,2],**kwargs, label = "Hann")
-plt.hist(Est_Slide[:,3],**kwargs, label = "Blackman")
-plt.hist(Est_Slide[:,4],**kwargs_2, label = "FlatTop")
+plt.hist(Est_Slice[:,0],**kwargs, label = "Rectangular")
+plt.hist(Est_Slice[:,1],**kwargs, label = "Bartlett")
+plt.hist(Est_Slice[:,2],**kwargs, label = "Hann")
+plt.hist(Est_Slice[:,3],**kwargs, label = "Blackman")
+plt.hist(Est_Slice[:,4],**kwargs_2, label = "FlatTop")
 plt.legend()
 
-# plt.figure(2)
-# plt.title("Integral")
-# kwargs = dict(alpha=0.5,bins = 10, density=False, stacked=True)
-# kwargs_2 = dict(alpha=0.5, bins = 2,density=False, stacked=True)
-# plt.hist(Est_integral[:,0],**kwargs, label = "Rectangular")
-# plt.hist(Est_integral[:,1],**kwargs, label = "Bartlett")
-# plt.hist(Est_integral[:,2],**kwargs, label = "Hann")
-# plt.hist(Est_integral[:,3],**kwargs, label = "Blackman")
-# plt.hist(Est_integral[:,4],**kwargs_2, label = "FlatTop")
-# plt.legend()
+plt.figure(2)
+plt.title("Integral")
+kwargs = dict(alpha=0.5,bins = 10, density=False, stacked=True)
+kwargs_2 = dict(alpha=0.5, bins = 2,density=False, stacked=True)
+plt.hist(Est_integral[:,0],**kwargs, label = "Rectangular")
+plt.hist(Est_integral[:,1],**kwargs, label = "Bartlett")
+plt.hist(Est_integral[:,2],**kwargs, label = "Hann")
+plt.hist(Est_integral[:,3],**kwargs, label = "Blackman")
+plt.hist(Est_integral[:,4],**kwargs_2, label = "FlatTop")
+plt.legend()
 
 
 #                 SESGO, VARIANZA 
 tus_resultados = [ 
-                   [Sesgo_rect[0], Varianza_rect[0]], # <-- Rectangular  Slice 
-                   [Sesgo_rect[1], Varianza_rect[1]], # <-- Rectangular  Integral
+                   [Sesgo_Rect[0], Varianza_Rect[0]], # <-- Rectangular  Slice 
+                   [Sesgo_Rect[1], Varianza_Rect[1]], # <-- Rectangular  Integral
                    [Sesgo_Bart[0], Varianza_Bart[0]], # <-- Bartlett     Slice
                    [Sesgo_Bart[1], Varianza_Bart[1]], # <-- Bartlett     Integral
                    [Sesgo_Hann[0], Varianza_Hann[0]], # <-- Hann         Slice

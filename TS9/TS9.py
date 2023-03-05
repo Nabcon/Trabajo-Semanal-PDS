@@ -91,37 +91,47 @@ plt.grid()
 plt.legend()
 #%% Analisis de latidos de ancho fijo
 qrs_detections = mat_struct['qrs_detections']
+
+# Viendo el grafico podemos ver que el latido va desde 0 a 600
+# qsr me da el pico del latido que se encuentra en la primera muestra en 250
+# por eso si me quiero quedar con toda la informacion desde el ecg selecciono desde
+# (pico - 250) hasta (pico + 350)
 inferior = 250
 sup = 350
+
 latido = (ecg_one_lead[int(qrs_detections[0] - inferior):int(qrs_detections[0] + sup)])
 muestras = np.arange(len(qrs_detections))
-i=0
 
 latidos = np.zeros([sup+inferior, qrs_detections.shape[0]])
 
 
 for nn in muestras:
     latidos[:,nn] = ecg_one_lead[int(qrs_detections[nn] - inferior):int(qrs_detections[nn] + sup)].flatten()
-    latidos[:,nn]  -= np.mean(latidos[:,nn])
+    latidos[:,nn]  -= np.mean(latidos[:,nn]) # le resto su valor medio para centrarlos
 
 
-## me quedo con la muestra 248
-
+# Analizo la muestra de latidos para separar lo normales de los ventriculares
+# veo que en la muestra 242 puedo distinguir bien ambos casos
 Estimador_amplitud = latidos[242, :]
 
-filtro_normal = Estimador_amplitud < 11500
+# Los que estan por debajo de 11500 son latidos normales
+# Caso contrario pertenecen a la categoria de ventriculares
+filtro_normal = Estimador_amplitud < 11500 #vector booleano
 
 # Index_Ventricular = np.where(Estimador_amplitud > 11500)[0]
 # Index_Ventricular = np.where(Estimador_amplitud < 11500)[0]
 
-
-Ventricular = latidos[:,np.bitwise_not(filtro_normal)]
+#Forma rapidisima
+# Selecciono del vector de latidos cuales son los que no superan la condicion
+Ventricular = latidos[:,np.bitwise_not(filtro_normal)] 
 Normal = latidos[:,filtro_normal]
 
+Ventricular_promedio = np.mean(Ventricular, axis = 1)
+Normal_promedio = np.mean(Normal, axis = 1)
 
 plt.figure(1)
-plt.plot(np.mean(Ventricular, axis = 1), 'b', label = 'Ventricular',alpha = 0.5, linewidth=3.0)
-plt.plot(np.mean(Normal, axis = 1), 'g', label = 'Normal', alpha = 0.5,  linewidth=3.0)
+plt.plot(Ventricular_promedio, 'b', label = 'Ventricular',alpha = 0.5, linewidth=3.0)
+plt.plot(Normal_promedio, 'g', label = 'Normal', alpha = 0.5,  linewidth=3.0)
 plt.legend()
 plt.grid()
 # plt.figure(2)
